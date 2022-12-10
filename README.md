@@ -340,7 +340,7 @@
 
    Configure the Firewall
 
-   > Note: Opening port 9000 in the external zone allows access to HAProxy stats that are useful for monitoring and troubleshooting. The UI can be accessed at: `http://{ocp-svc_IP_address}:9000/stats`
+   > Note: Opening port 1936 in the external zone allows access to HAProxy stats that are useful for monitoring and troubleshooting. The UI can be accessed at: `http://{ocp-svc_IP_address}:1936/stats`
 
    ```bash
    firewall-cmd --add-port=6443/tcp --zone=internal --permanent # kube-api-server on control plane nodes
@@ -350,7 +350,7 @@
    firewall-cmd --add-service=http --zone=external --permanent # web services hosted on worker nodes
    firewall-cmd --add-service=https --zone=internal --permanent # web services hosted on worker nodes
    firewall-cmd --add-service=https --zone=external --permanent # web services hosted on worker nodes
-   firewall-cmd --add-port=9000/tcp --zone=external --permanent # HAProxy Stats
+   firewall-cmd --add-port=1936/tcp --zone=external --permanent # HAProxy Stats
    firewall-cmd --reload
    ```
 
