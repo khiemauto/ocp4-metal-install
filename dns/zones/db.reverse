@@ -18,7 +18,3 @@ $TTL    604800
 201    IN    PTR    ocp-cp-1.lab.ocp.lan.
 202    IN    PTR    ocp-cp-2.lab.ocp.lan.
 203    IN    PTR    ocp-cp-3.lab.ocp.lan.
-;
-201    IN    PTR    ocp-w-1.lab.ocp.lan.
-202    IN    PTR    ocp-w-2.lab.ocp.lan.
-203    IN    PTR    ocp-w-3.lab.ocp.lan.

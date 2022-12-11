@@ -18,11 +18,6 @@ ocp-cp-1.lab.ocp.lan.         IN      A      192.168.22.201
 ocp-cp-2.lab.ocp.lan.         IN      A      192.168.22.202
 ocp-cp-3.lab.ocp.lan.         IN      A      192.168.22.203
 
-; Worker Nodes
-ocp-w-1.lab.ocp.lan.        IN      A      192.168.22.201
-ocp-w-2.lab.ocp.lan.        IN      A      192.168.22.202
-ocp-w-3.lab.ocp.lan.        IN      A      192.168.22.203
-
 ; OpenShift Internal - Load balancer
 api.lab.ocp.lan.        IN    A    192.168.22.1
 api-int.lab.ocp.lan.    IN    A    192.168.22.1
