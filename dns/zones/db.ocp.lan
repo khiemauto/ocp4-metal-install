@@ -29,3 +29,6 @@ etcd-0.lab.ocp.lan.    IN    A     192.168.22.201
 
 ; OpenShift Internal SRV records (cluster name = lab)
 _etcd-server-ssl._tcp.lab.ocp.lan.    86400     IN    SRV     0    10    2380    etcd-0.lab
+
+oauth-openshift.apps.lab.ocp.lan.     IN     A     192.168.22.1
+console-openshift-console.apps.lab.ocp.lan.     IN     A     192.168.22.1
