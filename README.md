@@ -56,7 +56,7 @@
    - NIC connected to the OCP network
    - Load the rhcos-4.11.9-x86_64-live.x86_64.iso image into the CD/DVD drive
 1. Create a Bootstrap virtual machine (this vm will be deleted once installation completes) with minimum settings:
-   - Name: ocp-boostrap
+   - Name: ocp-bootstrap
    - 4vcpu
    - 8GB RAM
    - 50GB HDD
@@ -523,7 +523,7 @@
    ~/openshift-install --dir ~/ocp-install wait-for bootstrap-complete --log-level=debug
    ```
 
-1. Once bootstrapping is complete the ocp-boostrap node [can be removed](#remove-the-bootstrap-node)
+1. Once bootstrapping is complete the ocp-bootstrap node [can be removed](#remove-the-bootstrap-node)
 
 ## Remove the Bootstrap Node
 
@@ -532,7 +532,7 @@
    ```bash
    # Two entries
    vim /etc/haproxy/haproxy.cfg
-   # Restart HAProxy - If you are still watching HAProxy stats console you will see that the ocp-boostrap host has been removed from the backends.
+   # Restart HAProxy - If you are still watching HAProxy stats console you will see that the ocp-bootstrap host has been removed from the backends.
    systemctl reload haproxy
    ```
 
