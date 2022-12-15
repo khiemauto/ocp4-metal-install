@@ -161,7 +161,32 @@
 
    > If changes arent applied automatically you can bounce the NIC with `nmcli connection down ens192` and `nmcli connection up ens192`
 
-1. Setup firewalld
+1. Setup without firewalld
+
+   ```bash
+   systemctl stop firewalld
+   systemctl disable firewalld
+   ```
+
+   Set Source-NAT
+
+   ```bash
+   sysctl -w net.ipv4.ip_forward=1
+   iptables -A FORWARD -i ens160 -o ens192 -m state --state ESTABLISHED,RELATED -j ACCEPT
+   iptables -A FORWARD -i ens192 -o ens160 -j ACCEPT
+   iptables -A FORWARD -j LOG
+   iptables -t NAT -A POSTROUTING -o ens160 -j MASQUERADE
+   ```
+
+   Check again to 1
+   
+   ```bash
+   cat /proc/sys/net/ipv4/ip_forward
+   #If show 0
+   echo 1 > /proc/sys/net/ipv4/ip_forward
+   ```
+
+1. Setup with firewalld
 
    Create **internal** and **external** zones
 
@@ -545,7 +570,7 @@
 1. Collect the OpenShift Console address and kubeadmin credentials from the output of the install-complete event
 
    ```bash
-   ~/openshift-install --dir ~/ocp-install wait-for install-complete
+   ~/openshift-install --dir ~/ocp-install wait-for install-complete --log-level=debug
    ```
 
 1. Continue to join the worker nodes to the cluster in a new tab whilst waiting for the above command to complete
