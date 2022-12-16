@@ -164,8 +164,12 @@
 1. Setup without firewalld
 
    ```bash
+   dnf install iptables-services
    systemctl stop firewalld
    systemctl disable firewalld
+   systemctl start iptables
+   systemctl enable iptables
+   systemctl status iptables
    ```
 
    Set Source-NAT
@@ -175,7 +179,7 @@
    iptables -A FORWARD -i ens160 -o ens192 -m state --state ESTABLISHED,RELATED -j ACCEPT
    iptables -A FORWARD -i ens192 -o ens160 -j ACCEPT
    iptables -A FORWARD -j LOG
-   iptables -t NAT -A POSTROUTING -o ens160 -j MASQUERADE
+   iptables -t nat -A POSTROUTING -o ens160 -j MASQUERADE
    ```
 
    Check again to 1
@@ -184,6 +188,14 @@
    cat /proc/sys/net/ipv4/ip_forward
    #If show 0
    echo 1 > /proc/sys/net/ipv4/ip_forward
+   ```
+
+   Save 
+   ```bash
+   iptables-save > /etc/iptables.conf
+   #Add to /etc/rc.d/rc.local
+   iptables-restore < /etc/iptables.conf
+   chmod +x /etc/rc.d/rc.local
    ```
 
 1. Setup with firewalld
