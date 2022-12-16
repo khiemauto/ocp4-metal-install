@@ -268,6 +268,8 @@
    Enable and start the service
 
    ```bash
+   echo 'OPTIONS="-4"' >> /etc/sysconfig/named
+   cat /etc/sysconfig/named
    systemctl enable named
    systemctl start named
    systemctl status named
