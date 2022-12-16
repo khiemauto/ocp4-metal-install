@@ -132,7 +132,7 @@
 1. Download [config files](https://github.com/khiemauto/ocp4-metal-install.git) for each of the services
 
    ```bash
-   git clone -b 1m1w --single-branch https://github.com/khiemauto/ocp4-metal-install.git
+   git clone -b 1m0w --single-branch https://github.com/khiemauto/ocp4-metal-install.git
    ```
 
 1. OPTIONAL: Create a file '~/.vimrc' and paste the following (this helps with editing in vim, particularly yaml files):

@@ -6,18 +6,15 @@ $TTL    604800
             2419200     ; Expire
              604800     ; Minimum
 )
-        IN      NS      ocp-svc
+        IN      NS      ocp-svc.ocp.lan.
 
 ocp-svc.ocp.lan.          IN      A       192.168.22.1
-
+ocp-svc.lab.ocp.lan.          IN      A       192.168.22.1
 ; Temp Bootstrap Node
 ocp-bootstrap.lab.ocp.lan.        IN      A      192.168.22.200
 
 ; Control Plane Nodes
 ocp-cp-1.lab.ocp.lan.         IN      A      192.168.22.201
-
-; Worker Nodes
-ocp-w-1.lab.ocp.lan.        IN      A      192.168.22.211
 
 ; OpenShift Internal - Load balancer
 api.lab.ocp.lan.        IN    A    192.168.22.1
