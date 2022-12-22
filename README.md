@@ -428,8 +428,8 @@
    ```bash
    <!-- ssh-keygen -->
    mkdir ~/.ssh/
-   cat ~/ocp4-metal-install/id_rsa.pub > ~/.ssh/id_rsa.pub
-   cat ~/ocp4-metal-install/id_rsa > ~/.ssh/id_rsa
+   cat ~/ocp4-metal-install/id_rsa.pub >> ~/.ssh/id_rsa.pub
+   cat ~/ocp4-metal-install/id_rsa >> ~/.ssh/id_rsa
    ```
 
 1. Create an install directory
@@ -497,37 +497,11 @@
 
 ## Deploy OpenShift
 
-1. Power on the ocp-bootstrap host and ocp-cp-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
+1. Power on the and ocp-cp-1 hosts waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso:
 
    ```bash
-   # Bootstrap Node - ocp-bootstrap
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/bootstrap.ign
-   
-   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
-   /usr/libexec/coreos-installer -d sda -b http://192.168.22.1:8080/ocp4/rhcos -i http://192.168.22.1:8080/ocp4/bootstrap.ign
-   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/bootstrap.ign --insecure --insecure-ignition # for OCP 4.6 and later
+   sudo coreos-installer install /dev/sda --ignition-url=http://192.168.22.1:8080/ocp4/bootstrap-in-place-for-live-iso.ign --insecure --insecure-ignition
    ```
-
-   ```bash
-   # Each of the Control Plane Nodes - ocp-cp-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/master.ign
-   
-   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
-   /usr/libexec/coreos-installer -d sda -b http://192.168.22.1:8080/ocp4/rhcos -i http://192.168.22.1:8080/ocp4/master.ign
-   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/master.ign --insecure --insecure-ignition # for OCP 4.6 and later
-   ```
-
-1. Power on the ocp-w-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
-
-   ```bash
-   # Each of the Worker Nodes - ocp-w-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/worker.ign
-   
-   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
-   /usr/libexec/coreos-installer -d sda -b http://192.168.22.1:8080/ocp4/rhcos -i http://192.168.22.1:8080/ocp4/worker.ign
-   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/worker.ign --insecure --insecure-ignition # for OCP 4.6 and later
-   ```
-
 ## Monitor the Bootstrap Process
 
 1. You can monitor the bootstrap process from the ocp-svc host at different log levels (debug, error, info)
