@@ -22,11 +22,10 @@
 
 ## Download Software
 
-1. Download [RockyLinux 8.7 image](https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.7-x86_64-minimal.iso)
-1. Download [RHCOS 4.11.9 live](https://mirror.openshift.com/pub/openshift-v4/x86_64/dependencies/rhcos/4.11/4.11.9/rhcos-4.11.9-x86_64-live.x86_64.iso)
-1. Download [RHCOS 4.11.9 metal](https://mirror.openshift.com/pub/openshift-v4/x86_64/dependencies/rhcos/4.11/4.11.9/rhcos-4.11.9-x86_64-metal.x86_64.raw.gz)
-1. Download [OpenShift 4.11.9 client](https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.11.9/openshift-client-linux-4.11.9.tar.gz)
-1. Download [OpenShift 4.11.9 installer](https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.11.9/openshift-install-linux-4.11.9.tar.gz)
+<!-- 1. Download [RockyLinux 8 minimal](https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.7-x86_64-minimal.iso) -->
+1. Download [RHCOS live](https://mirror.openshift.com/pub/openshift-v4/x86_64/dependencies/rhcos/latest/rhcos-live.x86_64.iso)
+1. Download [OpenShift client](https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/openshift-client-linux.tar.gz)
+1. Download [OpenShift installer](https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/openshift-install-linux.tar.gz)
 
 1. Login to [RedHat OpenShift Cluster Manager](https://cloud.redhat.com/openshift)
 1. Select 'Create Cluster' from the 'Clusters' navigation menu
@@ -37,31 +36,13 @@
 
 > VMware ESXi used in this guide
 
-1. Copy the Rocky-8.7-x86_64-minimal.iso iso to an ESXi datastore
-1. Create a new Port Group called 'OCP' under Networking
-    - (In case of VirtualBox choose "Internal Network" when creating each VM and give it the same name. ocp for instance)
-    - (In case of ProxMox you may use the same network bridge and choose a specific VLAN tag. 50 for instance) 
-1. Create 3 Control Plane virtual machines with minimum settings:
-   - Name: ocp-cp-# (Example ocp-cp-1)
-   - 4vcpu
+1. Create 1 Control Plane virtual machines with minimum settings:
+   - Name: ocp-cp-1
+   - 8vcpu
    - 16GB RAM
-   - 50GB HDD
+   - 120GB HDD
    - NIC connected to the OCP network
-   - Load the rhcos-4.11.9-x86_64-live.x86_64.iso image into the CD/DVD drive
-1. Create 2 Worker virtual machines (or more if you want) with minimum settings:
-   - Name: ocp-w-# (Example ocp-w-1)
-   - 4vcpu
-   - 8GB RAM
-   - 50GB HDD
-   - NIC connected to the OCP network
-   - Load the rhcos-4.11.9-x86_64-live.x86_64.iso image into the CD/DVD drive
-1. Create a Bootstrap virtual machine (this vm will be deleted once installation completes) with minimum settings:
-   - Name: ocp-bootstrap
-   - 4vcpu
-   - 8GB RAM
-   - 50GB HDD
-   - NIC connected to the OCP network
-   - Load the rhcos-4.11.9-x86_64-live.x86_64.iso image into the CD/DVD drive
+   - Load the rhcos-xx-x86_64-live.x86_64.iso image into the CD/DVD drive
 1. Create a Services virtual machine with minimum settings:
    - Name: ocp-svc
    - 4vcpu
@@ -71,7 +52,6 @@
    - NIC2 connected to the OCP network
    - Load the Rocky-8.7-x86_64-minimal.iso image into the CD/DVD drive
 1. Boot all virtual machines so they each are assigned a MAC address
-1. Shut down all virtual machines except for 'ocp-svc'
 1. Use the VMware ESXi dashboard to record the MAC address of each vm, these will be used later to set static IPs
 
 ## Configure Environmental Services
@@ -88,7 +68,7 @@
 1. Move the files downloaded from the RedHat Cluster Manager site to the ocp-svc node
 
    ```bash
-   scp openshift-install-linux-4.11.9.tar.gz openshift-client-linux-4.11.9.tar.gz rhcos-4.11.9-x86_64-metal.x86_64.raw.gz root@{ocp-svc_IP_address}:/root/
+   scp openshift-install-linux.tar.gz openshift-client-linux.tar.gz rhcos-live.x86_64.iso root@{ocp-svc_IP_address}:/root/
    ```
 
 1. SSH to the ocp-svc vm
@@ -448,8 +428,8 @@
    ```bash
    <!-- ssh-keygen -->
    mkdir ~/.ssh/
-   \cp ~/ocp4-metal-install/id_rsa.pub ~/.ssh/id_rsa.pub
-   \cp ~/ocp4-metal-install/id_rsa ~/.ssh/id_rsa
+   cat ~/ocp4-metal-install/id_rsa.pub > ~/.ssh/id_rsa.pub
+   cat ~/ocp4-metal-install/id_rsa > ~/.ssh/id_rsa
    ```
 
 1. Create an install directory
@@ -486,7 +466,7 @@
    Generate the Ignition config and Kubernetes auth files
 
    ```bash
-   ~/openshift-install create ignition-configs --dir ~/ocp-install/
+   ~/openshift-install create single-node-ignition-config --dir ~/ocp-install/
    ```
 
 1. Create a hosting directory to serve the configuration files for the OpenShift booting process
@@ -499,12 +479,6 @@
 
    ```bash
    cp -R ~/ocp-install/* /var/www/html/ocp4
-   ```
-
-1. Move the Core OS image to the web server directory (later you need to type this path multiple times so it is a good idea to shorten the name)
-
-   ```bash
-   cp ~/rhcos-4.11.9-x86_64-metal.x86_64.raw.gz /var/www/html/ocp4/rhcos
    ```
 
 1. Change ownership and permissions of the web server directory
