@@ -13,7 +13,5 @@ $TTL    604800
 1      IN    PTR    api.lab.ocp.lan.
 1      IN    PTR    api-int.lab.ocp.lan.
 ;
-200    IN    PTR    ocp-bootstrap.lab.ocp.lan.
-;
 201    IN    PTR    ocp-cp-1.lab.ocp.lan.
 ;

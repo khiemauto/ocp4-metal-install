@@ -10,9 +10,6 @@ $TTL    604800
 
 ocp-svc.ocp.lan.          IN      A       192.168.22.1
 
-; Temp Bootstrap Node
-ocp-bootstrap.lab.ocp.lan.        IN      A      192.168.22.200
-
 ; Control Plane Nodes
 ocp-cp-1.lab.ocp.lan.         IN      A      192.168.22.201
 

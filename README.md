@@ -68,7 +68,7 @@
 1. Move the files downloaded from the RedHat Cluster Manager site to the ocp-svc node
 
    ```bash
-   scp openshift-install-linux.tar.gz openshift-client-linux.tar.gz rhcos-live.x86_64.iso root@{ocp-svc_IP_address}:/root/
+   scp openshift-install-linux.tar.gz openshift-client-linux.tar.gz root@{ocp-svc_IP_address}:/root/
    ```
 
 1. SSH to the ocp-svc vm
