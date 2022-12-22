@@ -42,7 +42,6 @@
    - 16GB RAM
    - 120GB HDD
    - NIC connected to the OCP network
-   - Load the rhcos-xx-x86_64-live.x86_64.iso image into the CD/DVD drive
 1. Create a Services virtual machine with minimum settings:
    - Name: ocp-svc
    - 4vcpu
@@ -68,7 +67,7 @@
 1. Move the files downloaded from the RedHat Cluster Manager site to the ocp-svc node
 
    ```bash
-   scp openshift-install-linux.tar.gz openshift-client-linux.tar.gz root@{ocp-svc_IP_address}:/root/
+   scp openshift-install-linux.tar.gz openshift-client-linux.tar.gz rhcos-live.x86_64.iso root@{ocp-svc_IP_address}:/root/
    ```
 
 1. SSH to the ocp-svc vm
@@ -468,6 +467,14 @@
    ```bash
    ~/openshift-install create single-node-ignition-config --dir ~/ocp-install/
    ```
+1. Embed the ignition data into the RHCOS ISO by running the following commands:
+
+   ```bash
+   alias coreos-installer='podman run --privileged --pull always --rm -v /dev:/dev -v /run/udev:/run/udev -v $PWD:/data -w /data quay.io/coreos/coreos-installer:release'
+   ```
+   ```bash
+   coreos-installer iso ignition embed -fi ocp-install/bootstrap-in-place-for-live-iso.ign rhcos-live.x86_64.iso
+   ```
 
 1. Create a hosting directory to serve the configuration files for the OpenShift booting process
 
@@ -479,6 +486,12 @@
 
    ```bash
    cp -R ~/ocp-install/* /var/www/html/ocp4
+   ```
+
+1. Copy modified RHCOS ISO
+
+   ```bash
+   cp rhcos-live.x86_64.iso /var/www/html/ocp4
    ```
 
 1. Change ownership and permissions of the web server directory
@@ -497,11 +510,13 @@
 
 ## Deploy OpenShift
 
-1. Power on the and ocp-cp-1 hosts waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso:
-
+1. Download and load the modified RHCOS ISO to the ocp-cp-1 CD/DVD drive
    ```bash
-   sudo coreos-installer install /dev/sda --ignition-url=http://192.168.22.1:8080/ocp4/bootstrap-in-place-for-live-iso.ign --insecure --insecure-ignition
+   curl http://{ocp-svc_IP_address}:8080/ocp4/rhcos-live.x86_64.iso
    ```
+
+1. Power on the ocp-cp-1 . Wait to first reboot, detach RHCOS ISO and boot ocp-cp-1 to hard drive
+
 ## Monitor the Bootstrap Process
 
 1. You can monitor the bootstrap process from the ocp-svc host at different log levels (debug, error, info)
