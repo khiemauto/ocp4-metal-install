@@ -22,25 +22,22 @@
 
 ## Download Software
 
-1. Download [CentOS 8 x86_64 image](https://www.centos.org/centos-linux/)
+1. Download [RockyLinux 8 minimal](https://download.rockylinux.org/pub/rocky/8/isos/x86_64/Rocky-8.7-x86_64-minimal.iso)
+1. Download [RHCOS live](https://mirror.openshift.com/pub/openshift-v4/x86_64/dependencies/rhcos/latest/rhcos-live.x86_64.iso)
+1. Download [OpenShift client](https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/openshift-client-linux.tar.gz)
+1. Download [OpenShift installer](https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/latest/openshift-install-linux.tar.gz)
+
 1. Login to [RedHat OpenShift Cluster Manager](https://cloud.redhat.com/openshift)
 1. Select 'Create Cluster' from the 'Clusters' navigation menu
 1. Select 'RedHat OpenShift Container Platform'
 1. Select 'Run on Bare Metal'
-1. Download the following files:
-
-   - Openshift Installer for Linux
-   - Pull secret
-   - Command Line Interface for Linux and your workstations OS
-   - Red Hat Enterprise Linux CoreOS (RHCOS)
-     - rhcos-X.X.X-x86_64-metal.x86_64.raw.gz
-     - rhcos-X.X.X-x86_64-installer.x86_64.iso (or rhcos-X.X.X-x86_64-live.x86_64.iso for newer versions)
+1. Download 'Pull secret'
 
 ## Prepare the 'Bare Metal' environment
 
 > VMware ESXi used in this guide
 
-1. Copy the CentOS 8 iso to an ESXi datastore
+1. Copy the RockyLinux 8 iso to an ESXi datastore
 1. Create a new Port Group called 'OCP' under Networking
     - (In case of VirtualBox choose "Internal Network" when creating each VM and give it the same name. ocp for instance)
     - (In case of ProxMox you may use the same network bridge and choose a specific VLAN tag. 50 for instance) 
@@ -50,21 +47,21 @@
    - 16GB RAM
    - 50GB HDD
    - NIC connected to the OCP network
-   - Load the rhcos-X.X.X-x86_64-installer.x86_64.iso image into the CD/DVD drive
+   - Load the rhcos-X.X.X-x86_64-live.x86_64.iso image into the CD/DVD drive
 1. Create 2 Worker virtual machines (or more if you want) with minimum settings:
    - Name: ocp-w-# (Example ocp-w-1)
    - 4vcpu
    - 8GB RAM
    - 50GB HDD
    - NIC connected to the OCP network
-   - Load the rhcos-X.X.X-x86_64-installer.x86_64.iso image into the CD/DVD drive
+   - Load the rhcos-X.X.X-x86_64-live.x86_64.iso image into the CD/DVD drive
 1. Create a Bootstrap virtual machine (this vm will be deleted once installation completes) with minimum settings:
    - Name: ocp-boostrap
    - 4vcpu
    - 8GB RAM
    - 50GB HDD
    - NIC connected to the OCP network
-   - Load the rhcos-X.X.X-x86_64-installer.x86_64.iso image into the CD/DVD drive
+   - Load the rhcos-X.X.X-x86_64-live.x86_64.iso image into the CD/DVD drive
 1. Create a Services virtual machine with minimum settings:
    - Name: ocp-svc
    - 4vcpu
@@ -72,14 +69,14 @@
    - 120GB HDD
    - NIC1 connected to the VM Network (LAN)
    - NIC2 connected to the OCP network
-   - Load the CentOS_8.iso image into the CD/DVD drive
+   - Load the RockyLinux_8.iso image into the CD/DVD drive
 1. Boot all virtual machines so they each are assigned a MAC address
 1. Shut down all virtual machines except for 'ocp-svc'
 1. Use the VMware ESXi dashboard to record the MAC address of each vm, these will be used later to set static IPs
 
 ## Configure Environmental Services
 
-1. Install CentOS8 on the ocp-svc host
+1. Install RockyLinux8 on the ocp-svc host
 
    - Remove the home dir partition and assign all free storage to '/'
    - Optionally you can install the 'Guest Tools' package to have monitoring and reporting in the VMware ESXi dashboard
@@ -119,7 +116,7 @@
    tar xvf openshift-install-linux.tar.gz
    ```
 
-1. Update CentOS so we get the latest packages for each of the services we are about to install
+1. Update RockyLinux so we get the latest packages for each of the services we are about to install
 
    ```bash
    dnf update
@@ -131,10 +128,10 @@
    dnf install git -y
    ```
 
-1. Download [config files](https://github.com/ryanhay/ocp4-metal-install) for each of the services
+1. Download [config files](https://github.com/khiemauto/ocp4-metal-install.git) for each of the services
 
    ```bash
-   git clone https://github.com/ryanhay/ocp4-metal-install
+   git clone -b 3m0w --single-branch https://github.com/khiemauto/ocp4-metal-install.git
    ```
 
 1. OPTIONAL: Create a file '~/.vimrc' and paste the following (this helps with editing in vim, particularly yaml files):
@@ -162,6 +159,44 @@
    - Automatically connect
 
    > If changes arent applied automatically you can bounce the NIC with `nmcli connection down ens224` and `nmcli connection up ens224`
+
+1. Setup without firewalld
+
+   ```bash
+   dnf install iptables-services
+   systemctl stop firewalld
+   systemctl disable firewalld
+   systemctl start iptables
+   systemctl enable iptables
+   systemctl status iptables
+   ```
+
+   Set Source-NAT
+
+   ```bash
+   sysctl -w net.ipv4.ip_forward=1
+   iptables -A FORWARD -i ens160 -o ens192 -m state --state ESTABLISHED,RELATED -j ACCEPT
+   iptables -A FORWARD -i ens192 -o ens160 -j ACCEPT
+   iptables -A FORWARD -j LOG
+   iptables -t nat -A POSTROUTING -o ens160 -j MASQUERADE
+   iptables --list-rules
+   ```
+
+   Check again to 1
+   
+   ```bash
+   cat /proc/sys/net/ipv4/ip_forward
+   #If show 0
+   echo 1 > /proc/sys/net/ipv4/ip_forward
+   ```
+
+   Save 
+   ```bash
+   iptables-save > /etc/iptables.conf
+   #Add to /etc/rc.d/rc.local
+   iptables-restore < /etc/iptables.conf
+   chmod +x /etc/rc.d/rc.local
+   ```
 
 1. Setup firewalld
 
@@ -409,7 +444,10 @@
 1. Generate an SSH key pair keeping all default options
 
    ```bash
-   ssh-keygen
+   <!-- ssh-keygen -->
+   mkdir ~/.ssh/
+   cat ~/ocp4-metal-install/id_rsa.pub > ~/.ssh/id_rsa.pub
+   cat ~/ocp4-metal-install/id_rsa > ~/.ssh/id_rsa
    ```
 
 1. Create an install directory
@@ -461,12 +499,6 @@
    cp -R ~/ocp-install/* /var/www/html/ocp4
    ```
 
-1. Move the Core OS image to the web server directory (later you need to type this path multiple times so it is a good idea to shorten the name)
-
-   ```bash
-   cp ~/rhcos-X.X.X-x86_64-metal.x86_64.raw.gz /var/www/html/ocp4/rhcos
-   ```
-
 1. Change ownership and permissions of the web server directory
 
    ```bash
@@ -483,35 +515,20 @@
 
 ## Deploy OpenShift
 
-1. Power on the ocp-bootstrap host and ocp-cp-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
+1. Power on the ocp-bootstrap host and ocp-cp-\# hosts waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso:
 
    ```bash
-   # Bootstrap Node - ocp-bootstrap
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/bootstrap.ign
-   
-   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
-   /usr/libexec/coreos-installer -d sda -b http://192.168.22.1:8080/ocp4/rhcos -i http://192.168.22.1:8080/ocp4/bootstrap.ign # ver 4.5
-   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/bootstrap.ign --insecure --insecure-ignition
+   sudo coreos-installer install /dev/sda --ignition-url=http://192.168.22.1:8080/ocp4/bootstrap.ign --insecure --insecure-ignition
    ```
 
    ```bash
-   # Each of the Control Plane Nodes - ocp-cp-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/master.ign
-   
-   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
-   /usr/libexec/coreos-installer -d sda -b http://192.168.22.1:8080/ocp4/rhcos -i http://192.168.22.1:8080/ocp4/master.ign # ver 4.5
-   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/master.ign --insecure --insecure-ignition
+   sudo coreos-installer install /dev/sda --ignition-url=http://192.168.22.1:8080/ocp4/master.ign --insecure --insecure-ignition
    ```
 
-1. Power on the ocp-w-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
+1. Power on the ocp-w-\# hosts waited for it boot, use the following command then just shutdown after it finishes and make sure you remove the attached .iso:
 
    ```bash
-   # Each of the Worker Nodes - ocp-w-\#
-   coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/worker.ign
-   
-   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
-   /usr/libexec/coreos-installer -d sda -b http://192.168.22.1:8080/ocp4/rhcos -i http://192.168.22.1:8080/ocp4/worker.ign # ver 4.5
-   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/worker.ign --insecure --insecure-ignition
+   sudo coreos-installer install /dev/sda --ignition-url=http://192.168.22.1:8080/ocp4//worker.ign --insecure --insecure-ignition
    ```
 
 ## Monitor the Bootstrap Process
@@ -544,12 +561,14 @@
 1. Collect the OpenShift Console address and kubeadmin credentials from the output of the install-complete event
 
    ```bash
-   ~/openshift-install --dir ~/ocp-install wait-for install-complete
+   ~/openshift-install --dir ~/ocp-install wait-for install-complete  --log-level=debug
    ```
 
 1. Continue to join the worker nodes to the cluster in a new tab whilst waiting for the above command to complete
 
 ## Join Worker Nodes
+
+1. Power on ocp-w-\# hosts
 
 1. Setup 'oc' and 'kubectl' clients on the ocp-svc machine
 
